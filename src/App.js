@@ -1,5 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useState } from 'react';
+import { SortableList } from '@thaddeusjiang/react-sortable-list';
+import TodoListItem from './Components/TodoListItem';
 
 function App() {
 
@@ -13,7 +15,6 @@ function App() {
     const [todoSearch, setTodoSearch] = useState('');
     const [todoSort, setTodoSort] = useState();
     const [todoItemsLast, setTodoItemsLast] = useState();
-
     const submitAddForm = (e) => {
         e.preventDefault();
 
@@ -183,52 +184,62 @@ function App() {
                         <option value="completed">Completed</option>
                         <option value="id">Date Created</option>
                         <option value="lastUpdatedAt">Date Last Updated</option>
+                        <option value="drag-and-drop">Drag And Drop</option>
                     </select>
                 </div>
             </div>
             {
-                todoItems
-                    .filter(todoItem => todoItem.title.indexOf(todoSearch) > -1 || todoItem.description.indexOf(todoSearch) > -1)
-                    .sort((a, b) => {
-                        let sortDesc = todoSort === 'lastUpdatedAt';
+                todoSort == 'drag-and-drop' ?
+                    <SortableList
+                        items={todoItems}
+                        setItems={setTodoItems}
+                        itemRender={({ item }) => (
+                            (item.title.indexOf(todoSearch) > -1 || item.description.indexOf(todoSearch) > -1) && (
+                                <TodoListItem
+                                    todoItem={item}
+                                    toggleComplete={toggleComplete}
+                                    todoEditId={todoEditId}
+                                    setEditItem={setEditItem}
+                                    submitEditForm={submitEditForm}
+                                    todoEditTitle={todoEditTitle}
+                                    setTodoEditTitle={setTodoEditTitle}
+                                    todoEditDescription={todoEditDescription}
+                                    setTodoEditDescription={setTodoEditDescription}
+                                    deleteTodoItem={deleteTodoItem}
+                                />
+                            )
+                        )}
+                    />
+                    :
+                    todoItems
+                        .filter(todoItem => todoItem.title.indexOf(todoSearch) > -1 || todoItem.description.indexOf(todoSearch) > -1)
+                        .sort((a, b) => {
+                            let sortDesc = todoSort === 'lastUpdatedAt';
 
-                        if (a[todoSort || 'id'] < b[todoSort || 'id']) {
-                            return sortDesc ? 1 : -1;
-                        }
-                        if (a[todoSort || 'id'] > b[todoSort || 'id']) {
-                            return sortDesc ? -1 : 1;
-                        }
-                        return 0;
-                    })
-                    .map(todoItem => (
-                        <div key={todoItem.id}>
-                            <div className="row align-items-center">
-                                <div className="col-auto">
-                                    <input type="checkbox" checked={!!todoItem.completed} onChange={e => toggleComplete(todoItem.id, e.target.checked)} />
-                                </div>
-                                <div className="col">
-                                    {
-                                        todoEditId === todoItem.id ?
-                                            <form onSubmit={submitEditForm}>
-                                                <input className="form-control mb-2" value={todoEditTitle} onChange={(e) => setTodoEditTitle(e.target.value)} />
-                                                <input className="form-control mb-2" value={todoEditDescription} onChange={(e) => setTodoEditDescription(e.target.value)} />
-                                                <button type="submit" className="btn btn-secondary">SUBMIT</button>
-                                            </form>
-                                            :
-                                            <div>
-                                                <p className="fw-bold mb-2">{todoItem.title}</p>
-                                                <p className="mb-0">{todoItem.description}</p>
-                                            </div>
-                                    }
-                                </div>
-                                <div className="col-sm-auto pt-3 pt-sm-0">
-                                    <button className="btn btn-secondary me-2" onClick={() => setEditItem(todoItem.id, todoItem.title, todoItem.description)}>EDIT</button>
-                                    <button className="btn btn-danger" onClick={() => deleteTodoItem(todoItem.id)}>DELETE</button>
-                                </div>
+                            if (a[todoSort || 'id'] < b[todoSort || 'id']) {
+                                return sortDesc ? 1 : -1;
+                            }
+                            if (a[todoSort || 'id'] > b[todoSort || 'id']) {
+                                return sortDesc ? -1 : 1;
+                            }
+                            return 0;
+                        })
+                        .map(todoItem => (
+                            <div key={todoItem.id}>
+                                <TodoListItem
+                                    todoItem={todoItem}
+                                    toggleComplete={toggleComplete}
+                                    todoEditId={todoEditId}
+                                    setEditItem={setEditItem}
+                                    submitEditForm={submitEditForm}
+                                    todoEditTitle={todoEditTitle}
+                                    setTodoEditTitle={setTodoEditTitle}
+                                    todoEditDescription={todoEditDescription}
+                                    setTodoEditDescription={setTodoEditDescription}
+                                    deleteTodoItem={deleteTodoItem}
+                                />
                             </div>
-                            <hr />
-                        </div>
-                    ))
+                        ))
             }
         </div>
     );
