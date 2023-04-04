@@ -12,11 +12,14 @@ function App() {
     const [todoEditDescription, setTodoEditDescription] = useState('');
     const [todoSearch, setTodoSearch] = useState('');
     const [todoSort, setTodoSort] = useState();
+    const [todoItemsLast, setTodoItemsLast] = useState();
 
     const submitAddForm = (e) => {
         e.preventDefault();
 
         if (todoInputTitle) {
+            // Save last state before updating
+            setTodoItemsLast(JSON.parse(JSON.stringify([...todoItems])));
             setTodoItems([...todoItems, { id: Date.now(), title: todoInputTitle, description: todoInputDescription, lastUpdatedAt: 0, completed: false }]);
             setTodoInputTitle('');
             setTodoInputDescription('');
@@ -25,16 +28,23 @@ function App() {
 
     const toggleComplete = (todoItemId, checked) => {
         let newTodoItems = [...todoItems];
+
+        // Save last state before updating
+        setTodoItemsLast(JSON.parse(JSON.stringify([...todoItems])));
+
         newTodoItems.forEach(newTodoItem => {
             if (newTodoItem.id === todoItemId) {
                 newTodoItem.completed = checked;
             }
         });
-        setTodoItems(newTodoItems);
+        setTodoItems([...newTodoItems]);
     }
 
     const deleteTodoItem = (todoItemId) => {
         let newTodoItems = [...todoItems];
+
+        // Save last state before updating
+        setTodoItemsLast(JSON.parse(JSON.stringify([...todoItems])));
         let indexToDelete = -1;
         newTodoItems.forEach((newTodoItem, index) => {
             if (newTodoItem.id === todoItemId) {
@@ -57,6 +67,8 @@ function App() {
         e.preventDefault();
 
         let newTodoItems = [...todoItems];
+        // Save last state before updating
+        setTodoItemsLast(JSON.parse(JSON.stringify([...todoItems])));
         newTodoItems.forEach(newTodoItem => {
             if (newTodoItem.id === todoEditId) {
                 newTodoItem.title = todoEditTitle;
@@ -104,7 +116,7 @@ function App() {
                     if (i === 0) continue;
 
                     let row = rows[i].split(',');
-                    if (row.length == 5) {
+                    if (row.length === 5) {
                         console.log(row[3])
                         newTodoItems.push({
                             id: row[0],
@@ -119,6 +131,11 @@ function App() {
             };
             reader.readAsBinaryString(e.target.files[0]);
         }
+    }
+
+    const undoLastChange = () => {
+        setTodoItems([...todoItemsLast]);
+        setTodoItemsLast();
     }
 
     return (
@@ -138,10 +155,15 @@ function App() {
                 </form>
             </div>
             <div className="row">
-                <div className="col-lg-8">
+                <div className="col-lg-6">
                     <h1 className="fw-bold mb-2">TODO List</h1>
                 </div>
-                <div className="col-lg-4 text-end">
+                <div className="col-lg-6 text-lg-end mb-3 mb-lg-0">
+                    {
+                        todoItemsLast && (
+                            <button className="btn btn-warning me-2" onClick={undoLastChange}>UNDO LAST CHANGE</button>
+                        )
+                    }
                     <button className="btn btn-secondary" onClick={exportAsCsv}>EXPORT CSV</button>
                 </div>
             </div>
