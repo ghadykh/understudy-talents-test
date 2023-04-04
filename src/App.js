@@ -1,25 +1,215 @@
-import logo from './logo.svg';
-import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import { useState } from 'react';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+    // const [todoItems, setTodoItems] = useState([]);
+    const [todoItems, setTodoItems] = useState([{ "id": 1680605855867, "title": "title 1", "description": "description 1", lastUpdatedAt: 0, "completed": false }, { "id": 1680605863525, "title": "title 2", "description": "description 2", lastUpdatedAt: 0, "completed": true }, { "id": 1680605869900, "title": "item 1", "description": "test 1", lastUpdatedAt: 1680605877807, "completed": false }, { "id": 1680605872971, "title": "item 2", "description": "", lastUpdatedAt: 0, "completed": false }]);
+    const [todoInputTitle, setTodoInputTitle] = useState('');
+    const [todoInputDescription, setTodoInputDescription] = useState('');
+    const [todoEditId, setTodoEditId] = useState();
+    const [todoEditTitle, setTodoEditTitle] = useState('');
+    const [todoEditDescription, setTodoEditDescription] = useState('');
+    const [todoSearch, setTodoSearch] = useState('');
+    const [todoSort, setTodoSort] = useState();
+
+    const submitAddForm = (e) => {
+        e.preventDefault();
+
+        if (todoInputTitle) {
+            setTodoItems([...todoItems, { id: Date.now(), title: todoInputTitle, description: todoInputDescription, lastUpdatedAt: 0, completed: false }]);
+            setTodoInputTitle('');
+            setTodoInputDescription('');
+        }
+    }
+
+    const toggleComplete = (todoItemId, checked) => {
+        let newTodoItems = [...todoItems];
+        newTodoItems.forEach(newTodoItem => {
+            if (newTodoItem.id === todoItemId) {
+                newTodoItem.completed = checked;
+            }
+        });
+        setTodoItems(newTodoItems);
+    }
+
+    const deleteTodoItem = (todoItemId) => {
+        let newTodoItems = [...todoItems];
+        let indexToDelete = -1;
+        newTodoItems.forEach((newTodoItem, index) => {
+            if (newTodoItem.id === todoItemId) {
+                indexToDelete = index;
+            }
+        });
+        if (indexToDelete > -1) {
+            newTodoItems.splice(indexToDelete, 1);
+        }
+        setTodoItems(newTodoItems);
+    }
+
+    const setEditItem = (id, title, description) => {
+        setTodoEditId(id);
+        setTodoEditTitle(title);
+        setTodoEditDescription(description);
+    }
+
+    const submitEditForm = (e) => {
+        e.preventDefault();
+
+        let newTodoItems = [...todoItems];
+        newTodoItems.forEach(newTodoItem => {
+            if (newTodoItem.id === todoEditId) {
+                newTodoItem.title = todoEditTitle;
+                newTodoItem.description = todoEditDescription;
+                newTodoItem.lastUpdatedAt = Date.now();
+            }
+        });
+        setTodoItems(newTodoItems);
+        setTodoEditId();
+    }
+
+    const exportAsCsv = () => {
+        const rows = [
+            ["Id", "Title", "Descrpition", "Completed", "Last Updated At"],
+        ];
+
+        todoItems.forEach(todoItem => {
+            rows.push([todoItem.id, todoItem.title, todoItem.description, todoItem.completed ? true : false, todoItem.lastUpdatedAt]);
+        })
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+
+        rows.forEach(function (rowArray) {
+            let row = rowArray.join(",");
+            csvContent += row + "\r\n";
+        });
+
+        let encodedUri = encodeURI(csvContent);
+        let link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "todo.csv");
+        document.body.appendChild(link);
+
+        link.click();
+    }
+
+    const importCSV = (e) => {
+        if (e.target.files[0]) {
+            let reader = new FileReader();
+            reader.onload = function () {
+                let newTodoItems = [...todoItems];
+                let rows = reader.result.split('\r\n');
+                for (let i = 0; i < rows.length; i++) {
+                    // Skip first row
+                    if (i === 0) continue;
+
+                    let row = rows[i].split(',');
+                    if (row.length == 5) {
+                        console.log(row[3])
+                        newTodoItems.push({
+                            id: row[0],
+                            title: row[1],
+                            description: row[2],
+                            completed: row[3] === 'true',
+                            lastUpdatedAt: row[4],
+                        })
+                    }
+                }
+                setTodoItems(newTodoItems);
+            };
+            reader.readAsBinaryString(e.target.files[0]);
+        }
+    }
+
+    return (
+        <div className="container py-4">
+            <div className="border rounded p-3 mb-5">
+                <h1 className="fw-bold">Add TODO item</h1>
+                <form onSubmit={submitAddForm}>
+                    <div className="mb-3">
+                        <p className="mb-2">Title</p>
+                        <input className="form-control" value={todoInputTitle} onChange={e => setTodoInputTitle(e.target.value)} />
+                    </div>
+                    <div className="mb-3">
+                        <p className="mb-2">Description</p>
+                        <input className="form-control" value={todoInputDescription} onChange={e => setTodoInputDescription(e.target.value)} />
+                    </div>
+                    <button type="submit" className="btn btn-secondary">Add</button>
+                </form>
+            </div>
+            <div className="row">
+                <div className="col-lg-8">
+                    <h1 className="fw-bold mb-2">TODO List</h1>
+                </div>
+                <div className="col-lg-4 text-end">
+                    <button className="btn btn-secondary" onClick={exportAsCsv}>EXPORT CSV</button>
+                </div>
+            </div>
+            <div>
+                <label className="mb-2">Upload CSV</label>
+                <input placeholder="Upload CSV" className="form-control mb-3" type="file" onChange={importCSV} />
+            </div>
+            <div className="row">
+                <div className="col-md-9">
+                    <input placeholder="Search..." className="form-control mb-3" value={todoSearch} onChange={e => setTodoSearch(e.target.value)} />
+                </div>
+                <div className="col-md-3 mb-4 mb-md-0">
+                    <select className="form-control" value={todoSort} onChange={e => setTodoSort(e.target.value)}>
+                        <option value="" disabled>Sort By</option>
+                        <option value="title">Title</option>
+                        <option value="description">Description</option>
+                        <option value="completed">Completed</option>
+                        <option value="id">Date Created</option>
+                        <option value="lastUpdatedAt">Date Last Updated</option>
+                    </select>
+                </div>
+            </div>
+            {
+                todoItems
+                    .filter(todoItem => todoItem.title.indexOf(todoSearch) > -1 || todoItem.description.indexOf(todoSearch) > -1)
+                    .sort((a, b) => {
+                        let sortDesc = todoSort === 'lastUpdatedAt';
+
+                        if (a[todoSort || 'id'] < b[todoSort || 'id']) {
+                            return sortDesc ? 1 : -1;
+                        }
+                        if (a[todoSort || 'id'] > b[todoSort || 'id']) {
+                            return sortDesc ? -1 : 1;
+                        }
+                        return 0;
+                    })
+                    .map(todoItem => (
+                        <div key={todoItem.id}>
+                            <div className="row align-items-center">
+                                <div className="col-auto">
+                                    <input type="checkbox" checked={!!todoItem.completed} onChange={e => toggleComplete(todoItem.id, e.target.checked)} />
+                                </div>
+                                <div className="col">
+                                    {
+                                        todoEditId === todoItem.id ?
+                                            <form onSubmit={submitEditForm}>
+                                                <input className="form-control mb-2" value={todoEditTitle} onChange={(e) => setTodoEditTitle(e.target.value)} />
+                                                <input className="form-control mb-2" value={todoEditDescription} onChange={(e) => setTodoEditDescription(e.target.value)} />
+                                                <button type="submit" className="btn btn-secondary">SUBMIT</button>
+                                            </form>
+                                            :
+                                            <div>
+                                                <p className="fw-bold mb-2">{todoItem.title}</p>
+                                                <p className="mb-0">{todoItem.description}</p>
+                                            </div>
+                                    }
+                                </div>
+                                <div className="col-sm-auto pt-3 pt-sm-0">
+                                    <button className="btn btn-secondary me-2" onClick={() => setEditItem(todoItem.id, todoItem.title, todoItem.description)}>EDIT</button>
+                                    <button className="btn btn-danger" onClick={() => deleteTodoItem(todoItem.id)}>DELETE</button>
+                                </div>
+                            </div>
+                            <hr />
+                        </div>
+                    ))
+            }
+        </div>
+    );
 }
 
 export default App;
