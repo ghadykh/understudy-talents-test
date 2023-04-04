@@ -5,8 +5,7 @@ import TodoListItem from './Components/TodoListItem';
 
 function App() {
 
-    // const [todoItems, setTodoItems] = useState([]);
-    const [todoItems, setTodoItems] = useState([{ "id": 1680605855867, "title": "title 1", "description": "description 1", lastUpdatedAt: 0, "completed": false }, { "id": 1680605863525, "title": "title 2", "description": "description 2", lastUpdatedAt: 0, "completed": true }, { "id": 1680605869900, "title": "item 1", "description": "test 1", lastUpdatedAt: 1680605877807, "completed": false }, { "id": 1680605872971, "title": "item 2", "description": "", lastUpdatedAt: 0, "completed": false }]);
+    const [todoItems, setTodoItems] = useState([]);
     const [todoInputTitle, setTodoInputTitle] = useState('');
     const [todoInputDescription, setTodoInputDescription] = useState('');
     const [todoEditId, setTodoEditId] = useState();
